@@ -40,27 +40,29 @@ class SQLToORMConverter {
       }
 
       const filePath = path.join(outputDir, filename);
-      fs.writeFileSync(filePath, entityCode);
+      fs.writeFile(filePath, entityCode, (err) => {
+        if (err) {
+          return console.error(`Error creating file: ${err}`);
+        }
+        console.log(`File ${filePath} created successfully!`);
+      });
       console.log(`Generated ${filePath}`);
     });
   }
 }
 
-// Usage example
 const converter = new SQLToORMConverter();
-const sql = `
-CREATE TABLE users (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    email VARCHAR(255) UNIQUE NOT NULL
-);
-CREATE TABLE posts (
-    id SERIAL PRIMARY KEY,
-    title VARCHAR(255) NOT NULL,
-    content TEXT,
-    userId INTEGER REFERENCES users(id)
-);
-`;
 
-// Convert and write TypeORM entities to 'output/typeorm' folder
-converter.convert(sql, "typeorm", "output/typeorm");
+const sqlFilePath = path.join(__dirname, "input.text");
+
+fs.readFile(sqlFilePath, "utf8", (err, data) => {
+  if (err) {
+    console.error("Error reading the SQL file:", err);
+    return;
+  }
+  converter.convert(
+    data,
+    "typeorm",
+    `output/${new Date().getMilliseconds()}/typeorm`
+  );
+});

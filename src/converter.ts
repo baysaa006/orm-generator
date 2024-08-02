@@ -1,6 +1,3 @@
-import * as fs from "fs";
-import * as path from "path";
-
 interface ColumnDefinition {
   name: string;
   type: string;
@@ -17,22 +14,27 @@ interface TableDefinition {
 
 export function parseSQL(sql: string): TableDefinition[] {
   const tables: TableDefinition[] = [];
-  const createTableRegex = /CREATE TABLE (\w+) \(([^)]+)\);/g;
-  let match;
+  const tablePattern = /CREATE TABLE (\w+) \(([^)]+)\);/i;
+  const columnPattern =
+    /(\w+) (\w+)(\((\d+)\))? (PRIMARY KEY|NOT NULL|UNIQUE|DEFAULT (.+))?/gi;
 
-  while ((match = createTableRegex.exec(sql)) !== null) {
+  let match: RegExpExecArray | null;
+
+  while ((match = tablePattern.exec(sql)) !== null) {
     const tableName = match[1];
-    const columns = match[2].split(",").map((column) => {
-      const parts = column.trim().split(/\s+/);
-      const columnDef: ColumnDefinition = { name: parts[0], type: parts[1] };
-      if (parts.includes("PRIMARY")) columnDef.primaryKey = true;
-      if (parts.includes("UNIQUE")) columnDef.unique = true;
-      if (parts.includes("NOT") && parts.includes("NULL"))
-        columnDef.notNull = true;
-      const referencesMatch = /REFERENCES (\w+)/.exec(column);
-      if (referencesMatch) columnDef.references = referencesMatch[1];
-      return columnDef;
+    const columnsStr = match[2].trim();
+    const columns: ColumnDefinition[] = [];
+
+    columnsStr.split(",").forEach((columnStr) => {
+      const columnMatch = columnPattern.exec(columnStr.trim());
+
+      if (columnMatch) {
+        const columnName = columnMatch[1];
+        const columnType = columnMatch[2];
+        columns.push({ name: columnName, type: columnType });
+      }
     });
+
     tables.push({ name: tableName, columns });
   }
 

@@ -1,0 +1,95 @@
+-- Users Table
+CREATE TABLE
+    Users (
+        UserID SERIAL PRIMARY KEY,
+        Username VARCHAR(50) UNIQUE NOT NULL,
+        Email VARCHAR(100) UNIQUE NOT NULL,
+        PasswordHash VARCHAR(255) NOT NULL,
+        CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UpdatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    );
+
+-- Products Table
+CREATE TABLE
+    Products (
+        ProductID SERIAL PRIMARY KEY,
+        Name VARCHAR(100) NOT NULL,
+        Description TEXT,
+        Price DECIMAL(10, 2) NOT NULL,
+        Stock INT NOT NULL,
+        CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UpdatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    );
+
+-- Categories Table
+CREATE TABLE
+    Categories (
+        CategoryID SERIAL PRIMARY KEY,
+        Name VARCHAR(100) UNIQUE NOT NULL,
+        Description TEXT,
+        CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UpdatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    );
+
+-- Product Categories Table (Many-to-Many Relationship)
+CREATE TABLE
+    ProductCategories (
+        ProductID INT REFERENCES Products (ProductID) ON DELETE CASCADE,
+        CategoryID INT REFERENCES Categories (CategoryID) ON DELETE CASCADE,
+        PRIMARY KEY (ProductID, CategoryID)
+    );
+
+-- Orders Table
+CREATE TABLE
+    Orders (
+        OrderID SERIAL PRIMARY KEY,
+        UserID INT REFERENCES Users (UserID) ON DELETE CASCADE,
+        OrderDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        TotalAmount DECIMAL(10, 2) NOT NULL,
+        Status VARCHAR(50) DEFAULT 'Pending',
+        ShippingAddress TEXT,
+        BillingAddress TEXT
+    );
+
+-- Order Items Table
+CREATE TABLE
+    OrderItems (
+        OrderItemID SERIAL PRIMARY KEY,
+        OrderID INT REFERENCES Orders (OrderID) ON DELETE CASCADE,
+        ProductID INT REFERENCES Products (ProductID) ON DELETE CASCADE,
+        Quantity INT NOT NULL,
+        Price DECIMAL(10, 2) NOT NULL
+    );
+
+-- Reviews Table
+CREATE TABLE
+    Reviews (
+        ReviewID SERIAL PRIMARY KEY,
+        ProductID INT REFERENCES Products (ProductID) ON DELETE CASCADE,
+        UserID INT REFERENCES Users (UserID) ON DELETE CASCADE,
+        Rating INT CHECK (Rating BETWEEN 1 AND 5),
+        Comment TEXT,
+        CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+-- Payments Table
+CREATE TABLE
+    Payments (
+        PaymentID SERIAL PRIMARY KEY,
+        OrderID INT REFERENCES Orders (OrderID) ON DELETE CASCADE,
+        PaymentDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        Amount DECIMAL(10, 2) NOT NULL,
+        PaymentMethod VARCHAR(50),
+        TransactionID VARCHAR(100) UNIQUE
+    );
+
+-- Shipping Table
+CREATE TABLE
+    Shipping (
+        ShippingID SERIAL PRIMARY KEY,
+        OrderID INT REFERENCES Orders (OrderID) ON DELETE CASCADE,
+        ShippingDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        TrackingNumber VARCHAR(100),
+        Carrier VARCHAR(50),
+        Status VARCHAR(50) DEFAULT 'Pending'
+    );

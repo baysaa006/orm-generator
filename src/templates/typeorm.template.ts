@@ -4,7 +4,6 @@ export function generateTypeORMEntity(table: any): string {
   const columns = table.columns
     .map((column: any) => {
       let decorators = `@Column()`;
-      if (column.primaryKey) decorators = `@PrimaryGeneratedColumn()`;
       if (column.unique) decorators += `\n    @Column({ unique: true })`;
       if (column.notNull) decorators += `\n    @Column({ nullable: false })`;
       if (column.references)
